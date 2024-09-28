@@ -1,0 +1,147 @@
+Passos Detalhados de Instalação e Configuração
+
+1. Configuração da Máquina Virtual ou Docker
+
+Para Máquina Virtual (VM):
+Instale uma VM Linux (Ubuntu 20.04 ou superior recomendado).
+Usando VirtualBox ou VMware, crie uma VM e instale o Ubuntu ou outra distribuição Linux.
+
+	Para Docker:
+	1.1) Instale o Docker no host (opcional):
+	Bash
+	sudo apt-get update
+	sudo apt-get install docker.io
+	sudo systemctl start docker
+	sudo systemctl enable docker
+
+
+	1.2) Crie e execute um container Ubuntu:
+	Bash
+	docker run -it --name syslog-server -p 514:514/udp -p 514:514/tcp ubuntu bash
+
+
+2. Instalar o rsyslog no Servidor Linux
+
+	2.1) Atualize o sistema
+	Bash
+	sudo apt-get update
+
+	2.2) Instale o rsyslog:
+	Bash
+	sudo apt-get install rsyslog
+
+
+	2.3) Verifique se o rsyslog está ativo:
+	Bash
+	sudo systemctl status rsyslog
+
+
+3. Configurar o rsyslog para Receber Logs Remotos
+
+	3.1) Edite o arquivo de configuração do rsyslog:
+	Bash
+	sudo nano /etc/rsyslog.conf
+
+	3.2) Habilite a recepção de logs via UDP e TCP:
+	Descomente as linhas para permitir logs remotos:
+
+	Bash
+	# Provides UDP syslog reception
+	module(load="imudp") # carrega o módulo UDP
+	input(type="imudp" port="514") # porta UDP 514
+
+	# Provides TCP syslog reception
+	module(load="imtcp") # carrega o módulo TCP
+	input(type="imtcp" port="514") # porta TCP 514
+
+	3.3) Salve e feche o arquivo.
+	Se editou com vim:
+	esc + !wq:
+
+	3.4) Crie uma regra para armazenar logs de hosts remotos. Edite o arquivo:
+	Bash
+	sudo nano /etc/rsyslog.d/remote.conf
+
+	3.5) Adicione a regra:
+	Bash
+	if $fromhost-ip == '192.168.200.255' then {
+	    /var/log/remote/192.168.200.255.log
+	    stop
+	}
+	~ Isso armazenará os logs recebidos do host remoto 192.168.200.255 em /var/log/remote/. ~
+
+	3.6) Crie o diretório para armazenar logs remotos:
+	Bash
+	sudo mkdir /var/log/remote
+	sudo chmod 755 /var/log/remote
+
+	3.7) Reinicie o rsyslog para aplicar as mudanças:
+	Bash		
+	sudo systemctl restart rsyslog
+
+
+4. Configurar o Cliente (Windows ou Outro Servidor Linux)
+
+ Para Windows (com agente rsyslog):
+	1.1) Instale um agente syslog como o NXLog ou Snare para enviar logs ao servidor rsyslog.
+	1.2) Configure o agente para enviar logs para o IP do servidor Linux na porta 514.
+
+ Para outro servidor Linux:
+	1.1) Edite o arquivo de configuração /etc/rsyslog.conf no servidor cliente:
+	Bash
+	sudo nano /etc/rsyslog.conf
+
+	1.2) Adicione a linha para enviar logs para o servidor:
+	Bash
+	*.* @192.168.200.100:514   # (substitua pelo IP do seu servidor rsyslog)
+
+	1.3) Reinicie o rsyslog no cliente:
+	Bash
+	sudo systemctl restart rsyslog
+
+
+5. Instalar e Configurar o MySQL no Servidor
+	5.1) Instale o MySQL no servidor (ou no container Docker):
+	Bash
+	sudo apt-get install mysql-server
+
+
+	5.2) Configure o MySQL (caso necessário, defina uma senha):
+	Bash
+	sudo mysql_secure_installation
+
+	5.3) Acesse o MySQL:
+	Bash
+	sudo mysql -u root -p
+
+	5.4) Crie o Banco de Dados Usando o arquivo "logs.sql" de meu repositorio.
+
+
+
+6. Instalar o Python e Bibliotecas Necessárias
+	6.1) Instale o Python (se ainda não instalado):
+	Bash
+	sudo apt-get install python3 python3-pip
+
+	6.2) Bibliotecas do Python:
+	Bash
+	sudo apt-get install python3 python3-pip
+	
+
+7. Configurar o Script Python para Processar os Logs:
+	7.1) Crie o script Python, que vai filtrar, organizar e enviar os logs para o MySQL:
+		Crie o arquivo process_logs.py
+		Bash
+		sudo nano /path/to/process_logs.py
+
+	7.2) Insira o código "coleta.py" do meu respositorio
+
+8. Você pode criar um arquivo .bat e utilizar o agendador de eventos(se for Windows), para fazer rotina dentro do respositorio, seja rotina de limpeza, executar periodicamente o script, importação/exportação de tempos em tempos, conforme sua necessidade.
+
+
+
+
+
+
+
+
